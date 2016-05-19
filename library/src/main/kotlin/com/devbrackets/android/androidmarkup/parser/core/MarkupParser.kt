@@ -94,7 +94,7 @@ abstract class MarkupParser {
         //Updates the selectionStart to the new line
         if (selectionStart != 0) {
             val previousNewline = findPreviousChar(spannable, selectionStart, '\n')
-            selectionStart = if (previousNewline == -1) 0 else previousNewline
+            selectionStart = if (previousNewline == -1) 0 else previousNewline + 1
         }
 
         //Updates the selectionEnd to the new line
