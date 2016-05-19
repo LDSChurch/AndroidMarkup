@@ -80,10 +80,21 @@ abstract class MarkupParser {
         }
 
         if (!modifiedSpan) {
-            spannable.setSpan(StyleSpan(style), selectionStart, selectionEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            if (shouldStyleFullWord(spannable, selectionEnd, selectionStart, style)) {
+                styleFullWord(selectionEnd, selectionStart, spannable, style)
+            } else {
+                spannable.setSpan(StyleSpan(style), selectionStart, selectionEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
         }
 
         optimizeSpans(spannable, getOverlappingStyleSpans(spannable, selectionStart - 1, selectionEnd + 1, style))
+    }
+
+    protected fun styleFullWord(selectionEnd: Int, selectionStart: Int, spannable: Spannable, style: Int) {
+        var previousWhitespace = findPreviousWhitespaceOrStart(spannable, selectionStart)
+        previousWhitespace = if (previousWhitespace > 0) previousWhitespace + 1 else 0
+        spannable.setSpan(StyleSpan(style), previousWhitespace,
+                findNextWhitespaceOrEnd(spannable, selectionEnd), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
 
     protected fun list(spannable: Spannable, selectionStart: Int, selectionEnd: Int, ordered: Boolean) {
@@ -367,5 +378,58 @@ abstract class MarkupParser {
         }
 
         return -1
+    }
+
+    /**
+     * Finds the index of the previous space or new line character or 0 if the
+     * there are no instances between the startIndex and the beginning of the spannable
+     */
+    protected fun findPreviousWhitespaceOrStart(spannable: Spannable, startIndex: Int) : Int {
+        var start = startIndex
+        if (start < 0) {
+            return -1
+        }
+
+        if (start >= spannable.length) {
+            start = spannable.length - 1
+        }
+
+        for (i in start downTo 0) {
+            val spanCharacter = spannable[i]
+            if (spanCharacter == '\n' || spanCharacter == ' ') {
+                return i
+            }
+        }
+
+        return 0
+    }
+
+    /**
+     * Finds the index of the next space or new line character or the last index of the spannable if
+     * there are no instances between the startIndex and the end of the spannable
+     */
+    protected fun findNextWhitespaceOrEnd(spannable: Spannable, startIndex: Int): Int {
+        var start = startIndex
+        if (start < 0) {
+            start = 0
+        }
+
+        if (start >= spannable.length) {
+            return -1
+        }
+
+        for (i in start..spannable.length - 1) {
+            val spanCharacter = spannable[i]
+            if (spanCharacter == '\n' || spanCharacter == ' ') {
+                return i
+            }
+        }
+
+        return spannable.length
+    }
+
+    protected fun shouldStyleFullWord(spannable: Spannable, selectionStart: Int, selectionEnd: Int, style: Int) : Boolean {
+        val shouldStyle = selectionStart == selectionEnd && (style == Typeface.BOLD || style == Typeface.ITALIC)
+        return if (selectionStart > 0 && selectionStart < spannable.length && spannable[selectionStart].isLetterOrDigit()) shouldStyle else false
     }
 }
