@@ -70,13 +70,13 @@ abstract class MarkupParser {
             val spanStart = spannable.getSpanStart(span)
             val spanEnd = spannable.getSpanEnd(span)
 
-            if ((spanStart == selectionStart && spanEnd == selectionEnd) || shouldStyleFullWord) {
+            if (spanStart == selectionStart && spanEnd == selectionEnd) {
                 modifiedSpan = true
-                if (shouldStyleFullWord) {
-                    updateFullWordStyle(spannable, selectionStart, selectionEnd, span)
-                } else {
-                    spannable.removeSpan(span)
-                }
+                spannable.removeSpan(span)
+                continue
+            } else if (shouldStyleFullWord) {
+                modifiedSpan = true
+                updateFullWordStyle(spannable, selectionStart, selectionEnd, span)
                 continue
             }
 
@@ -97,9 +97,17 @@ abstract class MarkupParser {
 
     protected fun styleFullWord(selectionEnd: Int, selectionStart: Int, spannable: Spannable, style: Int) {
         var previousWhitespace = findPreviousWhitespaceOrStart(spannable, selectionStart)
-        previousWhitespace = if (previousWhitespace > 0) previousWhitespace + 1 else 0
+        val nextWhitespace = findNextWhitespaceOrEnd(spannable, selectionEnd)
+
+        // If the previous and next whitespace indexes are the same we are at the end of a word
+        // Find the whitespace before the word instead
+        if (previousWhitespace == nextWhitespace) {
+            previousWhitespace = findPreviousWhitespaceOrStart(spannable, selectionStart - 1)
+        }
+
+        if (previousWhitespace > 0) previousWhitespace++; // If the span isn't at the beginning do not include the whitespace in the span
         spannable.setSpan(StyleSpan(style), previousWhitespace,
-                findNextWhitespaceOrEnd(spannable, selectionEnd), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                nextWhitespace, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
 
     protected  fun updateFullWordStyle(spannable: Spannable, selectionStart: Int, selectionEnd: Int, span: StyleSpan) {
@@ -452,6 +460,7 @@ abstract class MarkupParser {
 
     protected fun shouldStyleFullWord(spannable: Spannable, selectionStart: Int, selectionEnd: Int, style: Int) : Boolean {
         val shouldStyle = selectionStart == selectionEnd && (style == Typeface.BOLD || style == Typeface.ITALIC)
-        return if (selectionStart > 0 && selectionStart < spannable.length && spannable[selectionStart].isLetterOrDigit()) shouldStyle else false
+        val isOnAWord = spannable[selectionStart].isLetterOrDigit() || spannable[selectionStart-1].isLetterOrDigit()
+        return if (selectionStart >= 0 && selectionStart < spannable.length && isOnAWord) shouldStyle else false
     }
 }
