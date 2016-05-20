@@ -63,15 +63,20 @@ abstract class MarkupParser {
 
     protected fun style(spannable: Spannable, selectionStart: Int, selectionEnd: Int, style: Int) {
         val overlappingSpans = getOverlappingStyleSpans(spannable, selectionStart, selectionEnd, style)
+        val shouldStyleFullWord = shouldStyleFullWord(spannable, selectionStart, selectionEnd, style)
 
         var modifiedSpan = false
         for (span in overlappingSpans) {
             val spanStart = spannable.getSpanStart(span)
             val spanEnd = spannable.getSpanEnd(span)
 
-            if (spanStart == selectionStart && spanEnd == selectionEnd) {
+            if ((spanStart == selectionStart && spanEnd == selectionEnd) || shouldStyleFullWord) {
                 modifiedSpan = true
-                spannable.removeSpan(span)
+                if (shouldStyleFullWord) {
+                    updateFullWordStyle(spannable, selectionStart, selectionEnd, span)
+                } else {
+                    spannable.removeSpan(span)
+                }
                 continue
             }
 
@@ -80,7 +85,7 @@ abstract class MarkupParser {
         }
 
         if (!modifiedSpan) {
-            if (shouldStyleFullWord(spannable, selectionEnd, selectionStart, style)) {
+            if (shouldStyleFullWord) {
                 styleFullWord(selectionEnd, selectionStart, spannable, style)
             } else {
                 spannable.setSpan(StyleSpan(style), selectionStart, selectionEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -95,6 +100,23 @@ abstract class MarkupParser {
         previousWhitespace = if (previousWhitespace > 0) previousWhitespace + 1 else 0
         spannable.setSpan(StyleSpan(style), previousWhitespace,
                 findNextWhitespaceOrEnd(spannable, selectionEnd), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+    }
+
+    protected  fun updateFullWordStyle(spannable: Spannable, selectionStart: Int, selectionEnd: Int, span: StyleSpan) {
+        val spanStart = spannable.getSpanStart(span)
+        val spanEnd = spannable.getSpanEnd(span)
+        val previousWhitespace = findPreviousWhitespaceOrStart(spannable, selectionStart)
+        val nextWhitespace = findNextWhitespaceOrEnd(spannable, selectionEnd)
+
+        if (spanStart < previousWhitespace) {
+            spannable.setSpan(StyleSpan(span.style), spanStart, previousWhitespace, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+
+        if (spanEnd > nextWhitespace) {
+            spannable.setSpan(StyleSpan(span.style), nextWhitespace + 1, spanEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+
+        spannable.removeSpan(span)
     }
 
     protected fun list(spannable: Spannable, selectionStart: Int, selectionEnd: Int, ordered: Boolean) {
