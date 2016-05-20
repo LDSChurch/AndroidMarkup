@@ -444,7 +444,7 @@ abstract class MarkupParser {
             start = 0
         }
 
-        if (start >= spannable.length) {
+        if (start > spannable.length) {
             return -1
         }
 
@@ -460,7 +460,7 @@ abstract class MarkupParser {
 
     protected fun shouldStyleFullWord(spannable: Spannable, selectionStart: Int, selectionEnd: Int, style: Int) : Boolean {
         val shouldStyle = selectionStart == selectionEnd && (style == Typeface.BOLD || style == Typeface.ITALIC)
-        val isOnAWord = selectionStart < spannable.length && (spannable[selectionStart].isLetterOrDigit() || spannable[selectionStart-1].isLetterOrDigit())
+        val isOnAWord = selectionStart == spannable.length || (spannable[selectionStart].isLetterOrDigit() || spannable[selectionStart-1].isLetterOrDigit())
         return if (selectionStart >= 0 && selectionStart <= spannable.length && isOnAWord) shouldStyle else false
     }
 }
