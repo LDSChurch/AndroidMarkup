@@ -91,6 +91,12 @@ abstract class MarkupParser {
         var selectionEnd = selectionEnd
         val overlappingSpans = getOverlappingListSpans(spannable, selectionStart, selectionEnd)
 
+        // Nothing is selected, include the full line
+        if (selectionStart == selectionEnd) {
+            val previousNewline = findPreviousChar(spannable, selectionStart - 1, '\n')
+            selectionStart = if (previousNewline == -1) 0 else previousNewline + 1
+        }
+
         //Updates the selectionStart to the new line
         if (selectionStart != 0) {
             val previousNewline = findPreviousChar(spannable, selectionStart, '\n')
