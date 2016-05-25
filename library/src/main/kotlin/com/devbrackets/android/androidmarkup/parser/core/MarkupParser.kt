@@ -100,7 +100,7 @@ abstract class MarkupParser {
         //Updates the selectionEnd to the new line
         if (selectionEnd != spannable.length - 1) {
             val nextNewline = findNextChar(spannable, selectionEnd, '\n')
-            selectionEnd = if (nextNewline == -1) spannable.length - 1 else nextNewline
+            selectionEnd = if (nextNewline == -1) spannable.length - 1 else nextNewline + 1
         }
 
         var modifiedSpan = false
