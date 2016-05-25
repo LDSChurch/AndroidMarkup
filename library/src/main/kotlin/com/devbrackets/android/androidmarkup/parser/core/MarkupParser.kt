@@ -62,6 +62,11 @@ abstract class MarkupParser {
     }
 
     protected fun style(spannable: Spannable, selectionStart: Int, selectionEnd: Int, style: Int) {
+        var selectionStart = selectionStart;
+        if (selectionStart == selectionEnd && selectionStart == spannable.length) {
+            selectionStart = findPreviousWhitespaceOrStart(spannable, selectionStart - 1)
+        }
+
         val overlappingSpans = getOverlappingStyleSpans(spannable, selectionStart, selectionEnd, style)
         val shouldStyleFullWord = shouldStyleFullWord(spannable, selectionStart, selectionEnd, style)
 
@@ -113,8 +118,14 @@ abstract class MarkupParser {
     protected  fun updateFullWordStyle(spannable: Spannable, selectionStart: Int, selectionEnd: Int, span: StyleSpan) {
         val spanStart = spannable.getSpanStart(span)
         val spanEnd = spannable.getSpanEnd(span)
-        val previousWhitespace = findPreviousWhitespaceOrStart(spannable, selectionStart)
+        var previousWhitespace = findPreviousWhitespaceOrStart(spannable, selectionStart)
         val nextWhitespace = findNextWhitespaceOrEnd(spannable, selectionEnd)
+
+        // If the previous and next whitespace indexes are the same we are at the end of a word
+        // Find the whitespace before the word instead
+        if (previousWhitespace == nextWhitespace) {
+            previousWhitespace = findPreviousWhitespaceOrStart(spannable, selectionStart - 1)
+        }
 
         if (spanStart < previousWhitespace) {
             spannable.setSpan(StyleSpan(span.style), spanStart, previousWhitespace, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -460,7 +471,8 @@ abstract class MarkupParser {
 
     protected fun shouldStyleFullWord(spannable: Spannable, selectionStart: Int, selectionEnd: Int, style: Int) : Boolean {
         val shouldStyle = selectionStart == selectionEnd && (style == Typeface.BOLD || style == Typeface.ITALIC)
-        val isOnAWord = selectionStart == spannable.length || (spannable[selectionStart].isLetterOrDigit() || spannable[selectionStart-1].isLetterOrDigit())
+        val isOnAWord = selectionStart == spannable.length || (spannable[selectionStart].isLetterOrDigit()
+                || (spannable[selectionStart].isWhitespace() && spannable[selectionStart-1].isLetterOrDigit()))
         return if (selectionStart >= 0 && selectionStart <= spannable.length && isOnAWord) shouldStyle else false
     }
 }
