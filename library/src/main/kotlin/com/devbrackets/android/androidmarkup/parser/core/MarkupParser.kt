@@ -303,6 +303,12 @@ abstract class MarkupParser {
      * @return True if the spans have been merged
      */
     protected fun compareAndMerge(spannable: Spannable, lhs: Any, rhs: Any): Boolean {
+
+        if (lhs is ListSpan && rhs is ListSpan && lhs.type != rhs.type) {
+            // Don't merge lists if they are not the same type
+            return false;
+        }
+
         val lhsStart = spannable.getSpanStart(lhs)
         val lhsEnd = spannable.getSpanEnd(lhs)
         val rhsStart = spannable.getSpanStart(rhs)
