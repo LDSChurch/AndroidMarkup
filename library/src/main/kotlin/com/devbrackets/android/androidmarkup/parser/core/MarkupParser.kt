@@ -62,45 +62,62 @@ abstract class MarkupParser {
     }
 
     protected fun style(spannable: Spannable, selectionStart: Int, selectionEnd: Int, style: Int) {
-        val overlappingSpans = getOverlappingStyleSpans(spannable, selectionStart, selectionEnd, style)
+        var selectionStartPosition = selectionStart
+        var selectionEndPosition = selectionEnd
+
+        if (selectionStartPosition > selectionEndPosition) {
+            // The spannable keeps track of what order something was highlighted in. If the start of the selection is after the end we need to reverse them
+            val tempHolder = selectionStartPosition
+            selectionStartPosition = selectionEndPosition
+            selectionEndPosition = tempHolder
+        }
+        val overlappingSpans = getOverlappingStyleSpans(spannable, selectionStartPosition, selectionEndPosition, style)
 
         var modifiedSpan = false
         for (span in overlappingSpans) {
             val spanStart = spannable.getSpanStart(span)
             val spanEnd = spannable.getSpanEnd(span)
 
-            if (spanStart == selectionStart && spanEnd == selectionEnd) {
+            if (spanStart == selectionStartPosition && spanEnd == selectionEndPosition) {
                 modifiedSpan = true
                 spannable.removeSpan(span)
                 continue
             }
 
-            modifiedSpan = modifiedSpan or handleSpanStartBeforeSelection(spannable, span, spanStart, spanEnd, selectionStart, selectionEnd)
-            modifiedSpan = modifiedSpan or handleSpanStartAfterSelection(spannable, span, spanStart, spanEnd, selectionStart, selectionEnd)
+            modifiedSpan = modifiedSpan or handleSpanStartBeforeSelection(spannable, span, spanStart, spanEnd, selectionStartPosition, selectionEndPosition)
+            modifiedSpan = modifiedSpan or handleSpanStartAfterSelection(spannable, span, spanStart, spanEnd, selectionStartPosition, selectionEndPosition)
         }
 
         if (!modifiedSpan) {
-            spannable.setSpan(StyleSpan(style), selectionStart, selectionEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(StyleSpan(style), selectionStartPosition, selectionEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
 
-        optimizeSpans(spannable, getOverlappingStyleSpans(spannable, selectionStart - 1, selectionEnd + 1, style))
+        optimizeSpans(spannable, getOverlappingStyleSpans(spannable, selectionStartPosition - 1, selectionEndPosition + 1, style))
     }
 
     protected fun list(spannable: Spannable, selectionStart: Int, selectionEnd: Int, ordered: Boolean) {
-        var selectionStart = selectionStart
-        var selectionEnd = selectionEnd
-        val overlappingSpans = getOverlappingListSpans(spannable, selectionStart, selectionEnd)
+        var selectionStartPosition = selectionStart
+        var selectionEndPosition = selectionEnd
 
-        //Updates the selectionStart to the new line
-        if (selectionStart != 0) {
-            val previousNewline = findPreviousChar(spannable, selectionStart, '\n')
-            selectionStart = if (previousNewline == -1) 0 else previousNewline
+        if (selectionStartPosition > selectionEndPosition) {
+            // The spannable keeps track of what order something was highlighted in. If the start of the selection is after the end we need to reverse them
+            val tempHolder = selectionStartPosition
+            selectionStartPosition = selectionEndPosition
+            selectionEndPosition = tempHolder
         }
 
-        //Updates the selectionEnd to the new line
-        if (selectionEnd != spannable.length - 1) {
-            val nextNewline = findNextChar(spannable, selectionEnd, '\n')
-            selectionEnd = if (nextNewline == -1) spannable.length - 1 else nextNewline
+        val overlappingSpans = getOverlappingListSpans(spannable, selectionStartPosition, selectionEndPosition)
+
+        //Updates the selectionStartPosition to the new line
+        if (selectionStartPosition != 0) {
+            val previousNewline = findPreviousChar(spannable, selectionStartPosition, '\n')
+            selectionStartPosition = if (previousNewline == -1) 0 else previousNewline
+        }
+
+        //Updates the selectionEndPosition to the new line
+        if (selectionEndPosition != spannable.length - 1) {
+            val nextNewline = findNextChar(spannable, selectionEndPosition, '\n')
+            selectionEndPosition = if (nextNewline == -1) spannable.length - 1 else nextNewline
         }
 
         var modifiedSpan = false
@@ -108,21 +125,21 @@ abstract class MarkupParser {
             val spanStart = spannable.getSpanStart(span)
             val spanEnd = spannable.getSpanEnd(span)
 
-            if (spanStart == selectionStart && spanEnd == selectionEnd) {
+            if (spanStart == selectionStartPosition && spanEnd == selectionEndPosition) {
                 modifiedSpan = true
                 spannable.removeSpan(span)
                 continue
             }
 
-            modifiedSpan = modifiedSpan or handleSpanStartBeforeSelection(spannable, span, spanStart, spanEnd, selectionStart, selectionEnd)
-            modifiedSpan = modifiedSpan or handleSpanStartAfterSelection(spannable, span, spanStart, spanEnd, selectionStart, selectionEnd)
+            modifiedSpan = modifiedSpan or handleSpanStartBeforeSelection(spannable, span, spanStart, spanEnd, selectionStartPosition, selectionEndPosition)
+            modifiedSpan = modifiedSpan or handleSpanStartAfterSelection(spannable, span, spanStart, spanEnd, selectionStartPosition, selectionEndPosition)
         }
 
         if (!modifiedSpan) {
-            spannable.setSpan(ListSpan(if (ordered) ListSpan.Type.NUMERICAL else ListSpan.Type.BULLET), selectionStart, selectionEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(ListSpan(if (ordered) ListSpan.Type.NUMERICAL else ListSpan.Type.BULLET), selectionStartPosition, selectionEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
 
-        optimizeSpans(spannable, getOverlappingListSpans(spannable, selectionStart - 1, selectionEnd + 1))
+        optimizeSpans(spannable, getOverlappingListSpans(spannable, selectionStartPosition - 1, selectionEndPosition + 1))
     }
 
     /**
@@ -220,13 +237,13 @@ abstract class MarkupParser {
     }
 
     protected fun getOverlappingStyleSpans(spannable: Spannable, selectionStart: Int, selectionEnd: Int, style: Int): List<StyleSpan> {
-        var selectionStart = selectionStart
-        var selectionEnd = selectionEnd
+        var selectionStartPosition = selectionStart
+        var selectionEndPosition = selectionEnd
         //Makes sure the start and end are contained in the spannable
-        selectionStart = if (selectionStart < 0) 0 else selectionStart
-        selectionEnd = if (selectionEnd >= spannable.length) spannable.length - 1 else selectionEnd
+        selectionStartPosition = if (selectionStartPosition < 0) 0 else selectionStartPosition
+        selectionEndPosition = if (selectionEndPosition >= spannable.length) spannable.length - 1 else selectionEndPosition
 
-        val spans = LinkedList(Arrays.asList(*spannable.getSpans(selectionStart, selectionEnd, StyleSpan::class.java)))
+        val spans = LinkedList(Arrays.asList(*spannable.getSpans(selectionStartPosition, selectionEndPosition, StyleSpan::class.java)))
 
         //Filters out the non-matching types
         val iterator = spans.iterator()
@@ -241,13 +258,13 @@ abstract class MarkupParser {
     }
 
     protected fun getOverlappingListSpans(spannable: Spannable, selectionStart: Int, selectionEnd: Int): List<ListSpan> {
-        var selectionStart = selectionStart
-        var selectionEnd = selectionEnd
+        var selectionStartPosition = selectionStart
+        var selectionEndPosition = selectionEnd
         //Makes sure the start and end are contained in the spannable
-        selectionStart = if (selectionStart < 0) 0 else selectionStart
-        selectionEnd = if (selectionEnd >= spannable.length) spannable.length - 1 else selectionEnd
+        selectionStartPosition = if (selectionStartPosition < 0) 0 else selectionStartPosition
+        selectionEndPosition = if (selectionEndPosition >= spannable.length) spannable.length - 1 else selectionEndPosition
 
-        return LinkedList(Arrays.asList(*spannable.getSpans(selectionStart, selectionEnd, ListSpan::class.java)))
+        return LinkedList(Arrays.asList(*spannable.getSpans(selectionStartPosition, selectionEndPosition, ListSpan::class.java)))
     }
 
     /**
@@ -332,16 +349,16 @@ abstract class MarkupParser {
     }
 
     protected fun findPreviousChar(spannable: Spannable, start: Int, character: Char): Int {
-        var start = start
-        if (start < 0) {
+        var startPosition = start
+        if (startPosition < 0) {
             return -1
         }
 
-        if (start >= spannable.length) {
-            start = spannable.length - 1
+        if (startPosition >= spannable.length) {
+            startPosition = spannable.length - 1
         }
 
-        for (i in start downTo 0) {
+        for (i in startPosition downTo 0) {
             if (spannable[i] == character) {
                 return i
             }
@@ -351,16 +368,16 @@ abstract class MarkupParser {
     }
 
     protected fun findNextChar(spannable: Spannable, start: Int, character: Char): Int {
-        var start = start
-        if (start < 0) {
-            start = 0
+        var startPosition = start
+        if (startPosition < 0) {
+            startPosition = 0
         }
 
-        if (start >= spannable.length) {
+        if (startPosition >= spannable.length) {
             return -1
         }
 
-        for (i in start..spannable.length - 1) {
+        for (i in startPosition..spannable.length - 1) {
             if (spannable[i] == character) {
                 return i
             }
