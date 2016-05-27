@@ -91,16 +91,22 @@ abstract class MarkupParser {
         var selectionEnd = selectionEnd
         val overlappingSpans = getOverlappingListSpans(spannable, selectionStart, selectionEnd)
 
+        // Nothing is selected, include the full line
+        if (selectionStart == selectionEnd) {
+            val previousNewline = findPreviousChar(spannable, selectionStart - 1, '\n')
+            selectionStart = if (previousNewline == -1) 0 else previousNewline + 1
+        }
+
         //Updates the selectionStart to the new line
         if (selectionStart != 0) {
             val previousNewline = findPreviousChar(spannable, selectionStart, '\n')
-            selectionStart = if (previousNewline == -1) 0 else previousNewline
+            selectionStart = if (previousNewline == -1) 0 else previousNewline + 1
         }
 
         //Updates the selectionEnd to the new line
         if (selectionEnd != spannable.length - 1) {
             val nextNewline = findNextChar(spannable, selectionEnd, '\n')
-            selectionEnd = if (nextNewline == -1) spannable.length - 1 else nextNewline
+            selectionEnd = if (nextNewline == -1) spannable.length - 1 else nextNewline + 1
         }
 
         var modifiedSpan = false
@@ -297,6 +303,12 @@ abstract class MarkupParser {
      * @return True if the spans have been merged
      */
     protected fun compareAndMerge(spannable: Spannable, lhs: Any, rhs: Any): Boolean {
+
+        if (lhs is ListSpan && rhs is ListSpan && lhs.type != rhs.type) {
+            // Don't merge lists if they are not the same type
+            return false;
+        }
+
         val lhsStart = spannable.getSpanStart(lhs)
         val lhsEnd = spannable.getSpanEnd(lhs)
         val rhsStart = spannable.getSpanStart(rhs)

@@ -21,7 +21,8 @@ class ListSpan @JvmOverloads constructor(val type: ListSpan.Type = ListSpan.Type
     constructor(gapWidth: Int) : this(Type.BULLET, gapWidth, DEFAULT_BULLET_RADIUS) { }
 
     override fun getLeadingMargin(first: Boolean): Int {
-        return 2 * bulletRadius + gapWidth
+        val numberOffset = number.toString().length;
+        return 2 * bulletRadius + gapWidth + (if (numberOffset == 1) numberOffset * 20 else numberOffset * 10)
     }
 
     override fun drawLeadingMargin(canvas: Canvas, paint: Paint, marginPosition: Int, direction: Int, top: Int, baseline: Int, bottom: Int, text: CharSequence, start: Int, end: Int, first: Boolean, layout: Layout) {
