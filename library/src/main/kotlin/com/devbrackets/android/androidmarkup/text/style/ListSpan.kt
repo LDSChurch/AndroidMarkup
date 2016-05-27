@@ -6,6 +6,7 @@ import android.graphics.Path
 import android.os.Build
 import android.text.Layout
 import android.text.style.LeadingMarginSpan
+import java.util.*
 
 class ListSpan @JvmOverloads constructor(val type: ListSpan.Type = ListSpan.Type.BULLET, protected val gapWidth: Int = ListSpan.DEFAULT_GAP_WIDTH, protected val bulletRadius: Int = ListSpan.DEFAULT_BULLET_RADIUS) : LeadingMarginSpan {
 
@@ -15,8 +16,8 @@ class ListSpan @JvmOverloads constructor(val type: ListSpan.Type = ListSpan.Type
     }
 
     //Used for the Numerical list
+    private var baselineList : SortedSet<Int> = sortedSetOf();
     private var number = 0
-    private var lastBaseline = -1
 
     constructor(gapWidth: Int) : this(Type.BULLET, gapWidth, DEFAULT_BULLET_RADIUS) { }
 
@@ -67,14 +68,16 @@ class ListSpan @JvmOverloads constructor(val type: ListSpan.Type = ListSpan.Type
     }
 
     protected fun drawNumericalMargin(canvas: Canvas, paint: Paint, marginPosition: Int, direction: Int, top: Int, baseline: Int, bottom: Int) {
-        if (baseline > lastBaseline) {
-            lastBaseline = baseline
-            number++
-        } else if (baseline < lastBaseline) {
-            lastBaseline = baseline
-            number = 1
-        }
+        baselineList.add(baseline)
 
+        var index = 0
+        for (base in baselineList) {
+            index++
+            if (base == baseline) {
+                number = index
+                break
+            }
+        }
         canvas.drawText("$number.", (marginPosition + direction * bulletRadius).toFloat(), baseline.toFloat(), paint)
     }
 
