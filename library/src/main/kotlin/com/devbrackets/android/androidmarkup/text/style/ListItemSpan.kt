@@ -7,13 +7,8 @@ import android.os.Build
 import android.text.Layout
 import android.text.style.LeadingMarginSpan
 
-class ListItemSpan @JvmOverloads constructor(val type: ListSpan.Type = ListSpan.Type.BULLET, protected val gapWidth: Int = ListItemSpan.DEFAULT_GAP_WIDTH,
+class ListItemSpan @JvmOverloads constructor(val type: ListSpan.Type = ListSpan.Type.BULLET, val number: Int, protected val gapWidth: Int = ListItemSpan.DEFAULT_GAP_WIDTH,
                                              protected val bulletRadius: Int = ListItemSpan.DEFAULT_BULLET_RADIUS) : LeadingMarginSpan {
-
-    //Used for the Numerical list
-    var number = 0
-
-    constructor(gapWidth: Int) : this(ListSpan.Type.BULLET, gapWidth, DEFAULT_BULLET_RADIUS) { }
 
     override fun getLeadingMargin(first: Boolean): Int {
         val numberOffset = number.toString().length;
@@ -33,7 +28,7 @@ class ListItemSpan @JvmOverloads constructor(val type: ListSpan.Type = ListSpan.
         if (type == ListSpan.Type.BULLET) {
             drawBulletMargin(canvas, paint, marginPosition, direction, top, baseline, bottom)
         } else {
-            drawNumericalMargin(canvas, paint, marginPosition, direction, top, baseline, bottom)
+            drawNumericalMargin(canvas, paint, marginPosition, direction, baseline, text, start, end)
         }
 
         paint.style = style
@@ -62,7 +57,7 @@ class ListItemSpan @JvmOverloads constructor(val type: ListSpan.Type = ListSpan.
         canvas.restore()
     }
 
-    protected fun drawNumericalMargin(canvas: Canvas, paint: Paint, marginPosition: Int, direction: Int, top: Int, baseline: Int, bottom: Int) {
+    protected fun drawNumericalMargin(canvas: Canvas, paint: Paint, marginPosition: Int, direction: Int, baseline: Int, text: CharSequence, start: Int, end: Int) {
         canvas.drawText("$number.", (marginPosition + direction * bulletRadius).toFloat(), baseline.toFloat(), paint)
     }
 

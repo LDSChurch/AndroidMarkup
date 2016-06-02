@@ -4,6 +4,7 @@ import android.graphics.Typeface
 import android.text.Spannable
 import android.text.Spanned
 import android.text.style.StyleSpan
+import android.util.Log
 import com.devbrackets.android.androidmarkup.text.style.ListItemSpan
 import com.devbrackets.android.androidmarkup.text.style.ListSpan
 import java.util.*
@@ -60,6 +61,14 @@ abstract class MarkupParser {
         }
 
         return false
+    }
+
+    open fun updateListItems(spannable: Spannable, start: Int, end: Int) {
+        val overlappingListSpans = getOverlappingListSpans(spannable, start, end)
+        for (listSpan in overlappingListSpans) {
+            removeListItemSpans(spannable, listSpan)
+            createListItemSpans(spannable, listSpan)
+        }
     }
 
     protected fun style(spannable: Spannable, selectionStart: Int, selectionEnd: Int, style: Int) {
@@ -337,10 +346,16 @@ abstract class MarkupParser {
         val listEnd = spannable.getSpanEnd(listSpan)
         val lineList = spannable.substring(listStart, listEnd).split('\n');
 
+        var lineNumber = 0
         var position = listStart
         for (line in lineList) {
-            val lineLength = line.length
-                spannable.setSpan(ListItemSpan(listSpan.type), position, position + lineLength, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            lineNumber++
+            val lineLength = line.length + 1
+//            if (lineLength == 0) {
+//                lineLength = 1
+//            }
+            spannable.setSpan(ListItemSpan(listSpan.type, lineNumber), position, position + lineLength, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            Log.d("CreateListItemSpans", spannable.substring(position, position + lineLength))
             position += lineLength;
         }
     }
