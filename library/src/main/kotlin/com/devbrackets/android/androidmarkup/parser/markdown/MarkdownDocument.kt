@@ -66,6 +66,7 @@ open class MarkdownDocument : MarkupDocument {
         builder.append(ORDERED_LIST_ITEM)
         builder.append(tempBuilder.toString())
 
+        // TODO markup each list item
 //        val lines = tempBuilder.toString().orEmpty().split("\n")
 //        for (i in lines.indices) {
 //            builder.append(ORDERED_LIST_ITEM)
