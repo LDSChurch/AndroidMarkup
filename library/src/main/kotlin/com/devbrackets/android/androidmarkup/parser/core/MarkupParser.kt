@@ -4,7 +4,6 @@ import android.graphics.Typeface
 import android.text.Spannable
 import android.text.Spanned
 import android.text.style.StyleSpan
-import android.util.Log
 import com.devbrackets.android.androidmarkup.text.style.ListItemSpan
 import com.devbrackets.android.androidmarkup.text.style.ListSpan
 import java.util.*
@@ -153,30 +152,38 @@ abstract class MarkupParser {
     }
 
     protected fun list(spannable: Spannable, selectionStart: Int, selectionEnd: Int, ordered: Boolean) {
+        removeListItemSpans(spannable, 0, spannable.length)
         var selectionStartPosition = selectionStart
         var selectionEndPosition = selectionEnd
 
+        // The spannable keeps track of what order something was highlighted in. If the start of the selection is after the end we need to reverse them
         if (selectionStartPosition > selectionEndPosition) {
-            // The spannable keeps track of what order something was highlighted in. If the start of the selection is after the end we need to reverse them
             val tempHolder = selectionStartPosition
             selectionStartPosition = selectionEndPosition
             selectionEndPosition = tempHolder
         }
 
+        // Nothing is selected, include the full line
+        if (selectionStartPosition == selectionEndPosition) {
+            val previousNewline = findPreviousChar(spannable, selectionStartPosition - 1, '\n')
+            selectionStartPosition = if (previousNewline == -1) 0 else previousNewline + 1
+            val nextNewline = findNextChar(spannable, selectionEndPosition, '\n')
+            selectionEndPosition = if (nextNewline == -1) spannable.length - 1 else nextNewline
+        }
+
         //Updates the selectionStartPosition to the new line
-        if (selectionStartPosition != 0 && spannable[selectionStart] != '\n') {
+        if (selectionStartPosition != 0 && spannable[selectionStartPosition - 1] != '\n') {
             val previousNewline = findPreviousChar(spannable, selectionStartPosition, '\n')
-            selectionStartPosition = if (previousNewline == -1) 0 else previousNewline
+            selectionStartPosition = if (previousNewline == -1) 0 else previousNewline + 1
         }
 
         //Updates the selectionEndPosition to the new line
-        if (selectionEndPosition != spannable.length - 1 && spannable[selectionStart] != '\n') {
+        if (selectionEndPosition != spannable.length - 1 && spannable[selectionEndPosition] != '\n') {
             val nextNewline = findNextChar(spannable, selectionEndPosition, '\n')
             selectionEndPosition = if (nextNewline == -1) spannable.length - 1 else nextNewline + 1
         }
 
         var overlappingListSpans = getOverlappingListSpans(spannable, selectionStartPosition, selectionEndPosition)
-
         var modifiedSpan = false
         for (span in overlappingListSpans) {
             val spanStart = spannable.getSpanStart(span)
@@ -198,12 +205,7 @@ abstract class MarkupParser {
         }
 
         optimizeSpans(spannable, getOverlappingListSpans(spannable, selectionStartPosition - 1, selectionEndPosition + 1))
-        overlappingListSpans = getOverlappingListSpans(spannable, selectionStartPosition, selectionEndPosition)
-
-        for (listSpan in overlappingListSpans) {
-            removeListItemSpans(spannable, listSpan)
-            createListItemSpans(spannable, listSpan)
-        }
+        updateListItems(spannable, 0, spannable.length)
     }
 
     /**
@@ -343,7 +345,13 @@ abstract class MarkupParser {
 
     protected fun createListItemSpans(spannable: Spannable, listSpan: ListSpan) {
         val listStart = spannable.getSpanStart(listSpan)
-        val listEnd = spannable.getSpanEnd(listSpan)
+        var listEnd = spannable.getSpanEnd(listSpan)
+
+        if (spannable[listEnd - 1] == '\n') {
+            // Do not split on the last new line
+            listEnd--
+        }
+
         val lineList = spannable.substring(listStart, listEnd).split('\n');
 
         var lineNumber = 0
@@ -352,15 +360,18 @@ abstract class MarkupParser {
             lineNumber++
             val lineLength = line.length + 1
             spannable.setSpan(ListItemSpan(listSpan.type, lineNumber), position, position + lineLength, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            Log.d("CreateListItemSpans", spannable.substring(position, position + lineLength))
             position += lineLength;
         }
     }
 
     protected fun removeListItemSpans(spannable: Spannable, listSpan: ListSpan) {
-        val overlappingItemSpans = getOverlappingListItemSpans(spannable, spannable.getSpanStart(listSpan), spannable.getSpanEnd(listSpan))
-        for (itemSpan in overlappingItemSpans) {
-            spannable.removeSpan(itemSpan)
+        removeListItemSpans(spannable, spannable.getSpanStart(listSpan), spannable.getSpanEnd(listSpan))
+    }
+
+    protected fun removeListItemSpans(spannable: Spannable, start: Int, end: Int) {
+        var spanList = spannable.getSpans(start, end, ListItemSpan::class.java)
+        for (span in spanList) {
+            spannable.removeSpan(span)
         }
     }
 

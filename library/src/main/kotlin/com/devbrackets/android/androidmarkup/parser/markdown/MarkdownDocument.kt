@@ -72,10 +72,6 @@ open class MarkdownDocument : MarkupDocument {
                 builder.appendln()
             }
         }
-
-        if (lines.isNotEmpty()) {
-            builder.appendln().appendln()
-        }
     }
 
     protected open fun convertUnOrderedListSpan(element: MarkupElement, builder: StringBuilder) {
@@ -89,10 +85,6 @@ open class MarkdownDocument : MarkupDocument {
             if (i != lines.size -1) {
                 builder.appendln()
             }
-        }
-
-        if (lines.isNotEmpty()) {
-            builder.appendln().appendln()
         }
     }
 
