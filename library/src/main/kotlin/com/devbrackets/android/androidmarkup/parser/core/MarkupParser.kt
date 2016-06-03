@@ -351,9 +351,6 @@ abstract class MarkupParser {
         for (line in lineList) {
             lineNumber++
             val lineLength = line.length + 1
-//            if (lineLength == 0) {
-//                lineLength = 1
-//            }
             spannable.setSpan(ListItemSpan(listSpan.type, lineNumber), position, position + lineLength, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             Log.d("CreateListItemSpans", spannable.substring(position, position + lineLength))
             position += lineLength;

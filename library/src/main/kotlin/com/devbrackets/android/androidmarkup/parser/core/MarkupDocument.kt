@@ -4,6 +4,7 @@ import android.graphics.Typeface
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.StyleSpan
+import com.devbrackets.android.androidmarkup.text.style.ListItemSpan
 import com.devbrackets.android.androidmarkup.text.style.ListSpan
 import java.util.*
 
@@ -152,6 +153,7 @@ open class MarkupDocument() {
         when (span) {
             is StyleSpan -> return if (span.style == Typeface.BOLD) SpanType.BOLD else SpanType.ITALIC
             is ListSpan -> return if (span.type == ListSpan.Type.BULLET) SpanType.UNORDERED_LIST else SpanType.ORDERED_LIST
+            is ListItemSpan -> return if (span.type == ListSpan.Type.BULLET) SpanType.UNORDERED_LIST_ITEM else SpanType.ORDERED_LIST_ITEM
             else -> return SpanType.TEXT
         }
     }
@@ -162,6 +164,8 @@ open class MarkupDocument() {
             SpanType.ITALIC -> return StyleSpan(Typeface.ITALIC)
             SpanType.ORDERED_LIST -> return ListSpan(ListSpan.Type.NUMERICAL)
             SpanType.UNORDERED_LIST -> return ListSpan(ListSpan.Type.BULLET)
+            SpanType.ORDERED_LIST_ITEM -> return ListItemSpan(ListSpan.Type.NUMERICAL, 0)
+            SpanType.UNORDERED_LIST_ITEM -> return ListItemSpan(ListSpan.Type.BULLET, 0)
             else -> return null
         }
     }
