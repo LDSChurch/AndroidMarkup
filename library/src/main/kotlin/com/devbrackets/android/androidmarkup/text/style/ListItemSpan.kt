@@ -11,7 +11,10 @@ class ListItemSpan @JvmOverloads constructor(val type: ListSpan.Type = ListSpan.
                                              protected val bulletRadius: Int = ListItemSpan.DEFAULT_BULLET_RADIUS) : LeadingMarginSpan {
 
     override fun getLeadingMargin(first: Boolean): Int {
-        val numberOffset = number.toString().length;
+        var numberOffset = 1
+        if (type == ListSpan.Type.NUMERICAL) {
+            numberOffset = number.toString().length
+        }
         return 2 * bulletRadius + gapWidth + (if (numberOffset == 1) numberOffset * 20 else numberOffset * 10)
     }
 
