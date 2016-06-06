@@ -49,12 +49,12 @@ abstract class MarkupParser {
             }
 
             SpanType.ORDERED_LIST -> {
-                list(spannable, startIndex, endIndex, true)
+                list(spannable, startIndex, endIndex, ListSpan.Type.NUMERICAL)
                 return true
             }
 
             SpanType.UNORDERED_LIST -> {
-                list(spannable, startIndex, endIndex, false)
+                list(spannable, startIndex, endIndex, ListSpan.Type.BULLET)
                 return true
             }
         }
@@ -151,7 +151,7 @@ abstract class MarkupParser {
         spannable.removeSpan(span)
     }
 
-    protected fun list(spannable: Spannable, selectionStart: Int, selectionEnd: Int, ordered: Boolean) {
+    protected fun list(spannable: Spannable, selectionStart: Int, selectionEnd: Int, spanType: ListSpan.Type) {
         removeListItemSpans(spannable, 0, spannable.length)
         var selectionStartPosition = selectionStart
         var selectionEndPosition = selectionEnd
@@ -189,6 +189,13 @@ abstract class MarkupParser {
             val spanStart = spannable.getSpanStart(span)
             val spanEnd = spannable.getSpanEnd(span)
 
+            if (span.type != spanType) {
+                // Swap the type of list
+                modifiedSpan = true
+                span.type = spanType
+                continue
+            }
+
             if (spanStart == selectionStartPosition && spanEnd == selectionEndPosition) {
                 modifiedSpan = true
                 removeListItemSpans(spannable, span)
@@ -201,8 +208,7 @@ abstract class MarkupParser {
         }
 
         if (!modifiedSpan) {
-            spannable.setSpan(ListSpan(if (ordered) ListSpan.Type.NUMERICAL else ListSpan.Type.BULLET),
-                    selectionStartPosition, selectionEndPosition + 1, Spanned.SPAN_EXCLUSIVE_INCLUSIVE)
+            spannable.setSpan(ListSpan(spanType), selectionStartPosition, selectionEndPosition + 1, Spanned.SPAN_EXCLUSIVE_INCLUSIVE)
         }
 
         optimizeSpans(spannable, getOverlappingListSpans(spannable, selectionStartPosition - 1, selectionEndPosition + 1))
