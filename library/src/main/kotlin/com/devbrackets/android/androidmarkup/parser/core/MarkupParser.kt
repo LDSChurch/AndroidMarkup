@@ -201,7 +201,8 @@ abstract class MarkupParser {
         }
 
         if (!modifiedSpan) {
-            spannable.setSpan(ListSpan(if (ordered) ListSpan.Type.NUMERICAL else ListSpan.Type.BULLET), selectionStartPosition, selectionEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(ListSpan(if (ordered) ListSpan.Type.NUMERICAL else ListSpan.Type.BULLET),
+                    selectionStartPosition, selectionEndPosition + 1, Spanned.SPAN_EXCLUSIVE_INCLUSIVE)
         }
 
         optimizeSpans(spannable, getOverlappingListSpans(spannable, selectionStartPosition - 1, selectionEndPosition + 1))
@@ -348,6 +349,11 @@ abstract class MarkupParser {
         var listEnd = spannable.getSpanEnd(listSpan)
 
         if (spannable[listEnd - 1] == '\n') {
+            if (spannable[listEnd - 2] == '\n') {
+                // If the list ends with two new lines break the list
+                spannable.setSpan(listSpan, listStart, listEnd - 2, Spanned.SPAN_EXCLUSIVE_INCLUSIVE)
+            }
+
             // Do not split on the last new line
             listEnd--
         }
@@ -358,7 +364,10 @@ abstract class MarkupParser {
         var position = listStart
         for (line in lineList) {
             lineNumber++
-            val lineLength = line.length + 1
+            var lineLength = line.length
+            if (lineNumber != lineList.size) {
+                lineLength++
+            }
             spannable.setSpan(ListItemSpan(listSpan.type, lineNumber), position, position + lineLength, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             position += lineLength;
         }
