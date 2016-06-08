@@ -45,13 +45,15 @@ open class MarkupEditText : AppCompatEditText {
     override fun onSelectionChanged(selStart: Int, selEnd: Int) {
         super.onSelectionChanged(selStart, selEnd)
 
-            val toggleBold = getOverlappingStyleSpans(text, selStart, selEnd, Typeface.BOLD).isNotEmpty()
-            boldToggled = toggleBold
-            val toggleItalic = getOverlappingStyleSpans(text, selStart, selEnd, Typeface.ITALIC).isNotEmpty()
-            italicToggled = toggleItalic
+            boldToggled = getOverlappingStyleSpans(text, selStart, selEnd, Typeface.BOLD).isNotEmpty()
+            italicToggled = getOverlappingStyleSpans(text, selStart, selEnd, Typeface.ITALIC).isNotEmpty()
+            orderedListToggled = getOverlappingListSpans(text, selStart, selEnd, ListSpan.Type.NUMERICAL).isNotEmpty()
+            unorderedListToggled = getOverlappingListSpans(text, selStart, selEnd, ListSpan.Type.BULLET).isNotEmpty()
 
-            markupControlsCallbacks?.boldToggled(toggleBold)
-            markupControlsCallbacks?.italicToggled(toggleItalic)
+            markupControlsCallbacks?.boldToggled(boldToggled)
+            markupControlsCallbacks?.italicToggled(italicToggled)
+            markupControlsCallbacks?.orderedListToggled(orderedListToggled)
+            markupControlsCallbacks?.unOrderedListToggled(unorderedListToggled)
     }
 
     open fun toggleBold() {
@@ -74,21 +76,13 @@ open class MarkupEditText : AppCompatEditText {
     }
 
     open fun toggleOrderedList() {
-        if (hasSelection()) {
-            markupParser.updateSpan(text, SpanType.ORDERED_LIST, selectionStart, selectionEnd)
-            onSelectionChanged(selectionStart, selectionEnd)
-        } else {
-            orderedListToggled = !orderedListToggled
-        }
+        markupParser.updateSpan(text, SpanType.ORDERED_LIST, selectionStart, selectionEnd)
+        orderedListToggled = !orderedListToggled
     }
 
     open fun toggleUnOrderedList() {
-        if (hasSelection()) {
-            markupParser.updateSpan(text, SpanType.UNORDERED_LIST, selectionStart, selectionEnd)
-            onSelectionChanged(selectionStart, selectionEnd)
-        } else {
-            unorderedListToggled = !unorderedListToggled
-        }
+        markupParser.updateSpan(text, SpanType.UNORDERED_LIST, selectionStart, selectionEnd)
+        unorderedListToggled = !unorderedListToggled
     }
 
     open fun getMarkup() : String {
@@ -166,14 +160,25 @@ open class MarkupEditText : AppCompatEditText {
         return spans
     }
 
-    protected fun getOverlappingListSpans(spannable: Spannable, selectionStart: Int, selectionEnd: Int): List<ListSpan> {
+    protected fun getOverlappingListSpans(spannable: Spannable, selectionStart: Int, selectionEnd: Int, type: ListSpan.Type): List<ListSpan> {
         var selectionStartPosition = selectionStart
         var selectionEndPosition = selectionEnd
         //Makes sure the start and end are contained in the spannable
         selectionStartPosition = if (selectionStartPosition < 0) 0 else selectionStartPosition
         selectionEndPosition = if (selectionEndPosition >= spannable.length) spannable.length - 1 else selectionEndPosition
 
-        return LinkedList(Arrays.asList(*spannable.getSpans(selectionStartPosition, selectionEndPosition, ListSpan::class.java)))
+        val spans = LinkedList(Arrays.asList(*spannable.getSpans(selectionStartPosition, selectionEndPosition, ListSpan::class.java)))
+
+        //Filters out the non-matching types
+        val iterator = spans.iterator()
+        while (iterator.hasNext()) {
+            val span = iterator.next()
+            if (span.type != type) {
+                iterator.remove()
+            }
+        }
+
+        return spans
     }
 
     interface MarkupControlsCallbacks {
