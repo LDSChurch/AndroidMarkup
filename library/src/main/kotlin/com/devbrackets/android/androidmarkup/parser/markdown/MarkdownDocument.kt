@@ -66,7 +66,7 @@ open class MarkdownDocument : MarkupDocument {
 
         val lines = tempBuilder.toString().orEmpty().split("\n")
         for (i in lines.indices) {
-            builder.append(ORDERED_LIST_ITEM)
+            builder.append(i + 1).append(". ")
             builder.append(lines[i])
             if (i != lines.size -1) {
                 builder.appendln()
@@ -115,7 +115,6 @@ open class MarkdownDocument : MarkupDocument {
     companion object {
         const val BOLD_TAG: String = "**"
         const val ITALICS_TAG: String = "_"
-        const val ORDERED_LIST_ITEM = "0. "
         const val UNORDERED_LIST_ITEM = "* "
 
         //Also known as ASCII punctuation characters
