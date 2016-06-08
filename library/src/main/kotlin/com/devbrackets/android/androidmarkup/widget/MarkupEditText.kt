@@ -109,8 +109,7 @@ open class MarkupEditText : AppCompatEditText {
             override fun onTextChanged(text: CharSequence?, start: Int, before: Int, count: Int) {
                 val spannable = text as Spannable
                 handleStyledTextChanged(spannable, start, start + count)
-
-                markupParser.updateListItems(text, start, start + count)
+                markupParser.updateListItems(spannable, start, start + count)
             }
         })
     }
