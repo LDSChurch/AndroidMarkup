@@ -45,15 +45,15 @@ open class MarkupEditText : AppCompatEditText {
     override fun onSelectionChanged(selStart: Int, selEnd: Int) {
         super.onSelectionChanged(selStart, selEnd)
 
-            boldToggled = getOverlappingStyleSpans(text, selStart, selEnd, Typeface.BOLD).isNotEmpty()
-            italicToggled = getOverlappingStyleSpans(text, selStart, selEnd, Typeface.ITALIC).isNotEmpty()
-            orderedListToggled = getOverlappingListSpans(text, selStart, selEnd, ListSpan.Type.NUMERICAL).isNotEmpty()
-            unorderedListToggled = getOverlappingListSpans(text, selStart, selEnd, ListSpan.Type.BULLET).isNotEmpty()
+        boldToggled = getOverlappingStyleSpans(text, selStart, selEnd, Typeface.BOLD).isNotEmpty()
+        italicToggled = getOverlappingStyleSpans(text, selStart, selEnd, Typeface.ITALIC).isNotEmpty()
+        orderedListToggled = getOverlappingListSpans(text, selStart, selEnd, ListSpan.Type.NUMERICAL).isNotEmpty()
+        unorderedListToggled = getOverlappingListSpans(text, selStart, selEnd, ListSpan.Type.BULLET).isNotEmpty()
 
-            markupControlsCallbacks?.boldToggled(boldToggled)
-            markupControlsCallbacks?.italicToggled(italicToggled)
-            markupControlsCallbacks?.orderedListToggled(orderedListToggled)
-            markupControlsCallbacks?.unOrderedListToggled(unorderedListToggled)
+        markupControlsCallbacks?.boldToggled(boldToggled)
+        markupControlsCallbacks?.italicToggled(italicToggled)
+        markupControlsCallbacks?.orderedListToggled(orderedListToggled)
+        markupControlsCallbacks?.unOrderedListToggled(unorderedListToggled)
     }
 
     open fun toggleBold() {
@@ -88,7 +88,7 @@ open class MarkupEditText : AppCompatEditText {
         markupControlsCallbacks?.unOrderedListToggled(unorderedListToggled)
     }
 
-    open fun getMarkup() : String {
+    open fun getMarkup(): String {
         return markupParser.fromSpanned(text)
     }
 
@@ -139,7 +139,7 @@ open class MarkupEditText : AppCompatEditText {
         val spanStart = spannable.getSpanStart(span)
         val spanEnd = spannable.getSpanEnd(span)
         spannable.setSpan(span, spanStart, start, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
-        spannable.setSpan(span.style, end, spanEnd, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+        spannable.setSpan(StyleSpan(span.style), end, spanEnd, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
     }
 
     protected fun getOverlappingStyleSpans(spannable: Spannable, selectionStart: Int, selectionEnd: Int, style: Int): List<StyleSpan> {
