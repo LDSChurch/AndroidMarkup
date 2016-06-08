@@ -72,17 +72,20 @@ open class MarkupEditText : AppCompatEditText {
             onSelectionChanged(selectionStart, selectionEnd)
         } else {
             italicToggled = !italicToggled
+            markupControlsCallbacks?.italicToggled(italicToggled)
         }
     }
 
     open fun toggleOrderedList() {
         markupParser.updateSpan(text, SpanType.ORDERED_LIST, selectionStart, selectionEnd)
         orderedListToggled = !orderedListToggled
+        markupControlsCallbacks?.orderedListToggled(orderedListToggled)
     }
 
     open fun toggleUnOrderedList() {
         markupParser.updateSpan(text, SpanType.UNORDERED_LIST, selectionStart, selectionEnd)
         unorderedListToggled = !unorderedListToggled
+        markupControlsCallbacks?.unOrderedListToggled(unorderedListToggled)
     }
 
     open fun getMarkup() : String {
