@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -16,7 +17,8 @@ import com.devbrackets.android.androidmarkupdemo.R;
  * A simple widget to perform the controls for interacting with the
  * {@link MarkupEditText}
  */
-public class MarkupControls extends FrameLayout {
+public class MarkupControls extends FrameLayout implements MarkupEditText.MarkupControlsCallbacks {
+
     public interface Callback {
         boolean onBoldClick();
         boolean onItalicClick();
@@ -33,6 +35,8 @@ public class MarkupControls extends FrameLayout {
     private Callback callback;
     @Nullable
     private MarkupEditText markupEditText;
+
+    private Context context;
 
     public MarkupControls(Context context) {
         super(context);
@@ -55,12 +59,51 @@ public class MarkupControls extends FrameLayout {
         init(context, attrs);
     }
 
+    @Override
+    public void boldToggled(boolean on) {
+        if (on) {
+            boldView.setBackgroundColor(ContextCompat.getColor(context, R.color.grey));
+        } else {
+            boldView.setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent));
+        }
+    }
+
+    @Override
+    public void italicToggled(boolean on) {
+        if (on) {
+            italicView.setBackgroundColor(ContextCompat.getColor(context, R.color.grey));
+        } else {
+            italicView.setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent));
+        }
+    }
+
+    @Override
+    public void orderedListToggled(boolean on) {
+        if (on) {
+            orderedListView.setBackgroundColor(ContextCompat.getColor(context, R.color.grey));
+        } else {
+            orderedListView.setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent));
+        }
+    }
+
+    @Override
+    public void unOrderedListToggled(boolean on) {
+        if (on) {
+            unorderedListView.setBackgroundColor(ContextCompat.getColor(context, R.color.grey));
+        } else {
+            unorderedListView.setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent));
+        }
+    }
+
     public void setCallback(@Nullable Callback callback) {
         this.callback = callback;
     }
 
     public void setMarkupEditText(@Nullable MarkupEditText markupEditText) {
         this.markupEditText = markupEditText;
+        if (this.markupEditText != null) {
+            this.markupEditText.markupControlsCallbacks = this;
+        }
     }
 
     /**
@@ -70,6 +113,7 @@ public class MarkupControls extends FrameLayout {
      * @param context The context for the owner of the playback controls
      */
     private void init(Context context, @Nullable AttributeSet attrs) {
+        this.context = context;
         View.inflate(context, R.layout.widget_markup_controls, this);
 
         //Done to support the xml layout preview

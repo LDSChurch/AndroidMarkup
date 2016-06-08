@@ -98,7 +98,7 @@ abstract class MarkupParser {
         }
 
         if (!modifiedSpan) {
-            spannable.setSpan(StyleSpan(style), selectionStartPosition, selectionEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(StyleSpan(style), selectionStartPosition, selectionEndPosition, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
         }
 
         optimizeSpans(spannable, getOverlappingStyleSpans(spannable, selectionStartPosition - 1, selectionEndPosition + 1, style))
@@ -201,30 +201,30 @@ abstract class MarkupParser {
 
         //Handles the first case listed above
         if (spanEnd < selectionEnd) {
-            spannable.setSpan(span, spanStart, selectionEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(span, spanStart, selectionEnd, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
             return true
         }
 
         //Handles the second case listed above
         if (selectionStart == spanStart && spanEnd > selectionEnd) {
-            spannable.setSpan(span, selectionEnd, spanEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(span, selectionEnd, spanEnd, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
             return true
         }
 
         //Handles the third case listed above
         if (spanEnd > selectionEnd) {
-            spannable.setSpan(span, spanStart, selectionStart, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(span, spanStart, selectionStart, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
 
             val duplicate = duplicateSpan(span)
             if (duplicate != null) {
-                spannable.setSpan(duplicate, selectionEnd, spanEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                spannable.setSpan(duplicate, selectionEnd, spanEnd, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
             }
 
             return true
         }
 
         //Handles the final case listed above
-        spannable.setSpan(span, spanStart, selectionStart, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(span, spanStart, selectionStart, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
         return true
     }
 
@@ -253,12 +253,12 @@ abstract class MarkupParser {
 
         //Handles the first case listed above
         if (spanEnd < selectionEnd) {
-            spannable.setSpan(span, selectionStart, selectionEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(span, selectionStart, selectionEnd, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
             return true
         }
 
         //Handles the final case listed above
-        spannable.setSpan(span, selectionStart, spanEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(span, selectionStart, spanEnd, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
         return true
     }
 
@@ -310,7 +310,7 @@ abstract class MarkupParser {
         if (spannable[listEnd - 1] == '\n') {
             if (spannable[listEnd - 2] == '\n') {
                 // If the list ends with two new lines break the list
-                spannable.setSpan(listSpan, listStart, listEnd - 2, Spanned.SPAN_EXCLUSIVE_INCLUSIVE)
+                spannable.setSpan(listSpan, listStart, listEnd - 2, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
             }
 
             // Do not split on the last new line
@@ -403,11 +403,11 @@ abstract class MarkupParser {
 
         if (lhsStart < rhsStart && rhsStart <= lhsEnd) {
             val end = if (lhsEnd > rhsEnd) lhsEnd else rhsEnd
-            spannable.setSpan(lhs, lhsStart, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(lhs, lhsStart, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
             return true
         } else if (lhsStart >= rhsStart && lhsStart <= rhsEnd) {
             val end = if (lhsEnd > rhsEnd) lhsEnd else rhsEnd
-            spannable.setSpan(lhs, rhsStart, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(lhs, rhsStart, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
             return true
         }
 
