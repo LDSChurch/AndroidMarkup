@@ -115,7 +115,6 @@ open class MarkdownDocument : MarkupDocument {
     companion object {
         const val BOLD_TAG: String = "**"
         const val ITALICS_TAG: String = "_"
-        const val ORDERED_LIST_ITEM = "0. "
         const val UNORDERED_LIST_ITEM = "* "
 
         //Also known as ASCII punctuation characters
