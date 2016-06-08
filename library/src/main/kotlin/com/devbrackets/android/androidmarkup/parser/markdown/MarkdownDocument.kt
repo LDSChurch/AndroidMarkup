@@ -66,7 +66,7 @@ open class MarkdownDocument : MarkupDocument {
 
         val lines = tempBuilder.toString().orEmpty().split("\n")
         for (i in lines.indices) {
-            builder.append(ORDERED_LIST_ITEM)
+            builder.append(i + 1).append(". ")
             builder.append(lines[i])
             if (i != lines.size -1) {
                 builder.appendln()
