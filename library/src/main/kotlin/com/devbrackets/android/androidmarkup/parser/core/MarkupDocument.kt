@@ -36,7 +36,7 @@ open class MarkupDocument() {
         val spanObj = getSpanObject(parent.spanType)
 
         spanObj?.let {
-            builder.setSpan(it, startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            builder.setSpan(it, startIndex, endIndex, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
         }
     }
 
