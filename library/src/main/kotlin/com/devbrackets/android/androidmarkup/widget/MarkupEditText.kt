@@ -109,6 +109,7 @@ open class MarkupEditText : AppCompatEditText {
             override fun onTextChanged(text: CharSequence?, start: Int, before: Int, count: Int) {
                 val spannable = text as Spannable
                 handleStyledTextChanged(spannable, start, start + count)
+                handleListTextChanged(spannable, start, start + count)
                 markupParser.updateListItems(spannable, start, start + count)
             }
         })
@@ -131,6 +132,18 @@ open class MarkupEditText : AppCompatEditText {
             for (span in italicSpans) {
                 updateSpanPositions(end, span, spannable, start)
             }
+        }
+    }
+
+    protected fun handleListTextChanged(spannable: Spannable, start: Int, end: Int) {
+        val orderedListSpans = getOverlappingListSpans(spannable, start, end, ListSpan.Type.NUMERICAL)
+        if (orderedListSpans.isEmpty() && orderedListToggled) {
+            spannable.setSpan(ListSpan(ListSpan.Type.NUMERICAL), start, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+        }
+
+        val unorderedListSpans = getOverlappingListSpans(spannable, start, end, ListSpan.Type.BULLET)
+        if (unorderedListSpans.isEmpty() && unorderedListToggled) {
+            spannable.setSpan(ListSpan(ListSpan.Type.BULLET), start, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
         }
     }
 
